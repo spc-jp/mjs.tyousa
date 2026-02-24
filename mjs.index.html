@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJS ダーツマシンレンタル事業 戦略分析ダッシュボード</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f5f5f0; /* Warm Neutral Background */
+            color: #4a4a4a;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card-shadow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-active {
+            border-bottom: 2px solid #8c7b75; /* Warm earthy tone */
+            font-weight: 700;
+            color: #2d2d2d;
+        }
+
+        /* Custom Scrollbar for inner content */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af; 
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals & Earth Tones (Background: #f5f5f0, Accents: #8c7b75, #e0e0dc, #2d2d2d) -->
+    <!-- Application Structure Plan:
+         The SPA is designed as a Strategic Analysis Dashboard. 
+         1. Executive Summary: Immediate context (MJS goals vs Reality).
+         2. Competitive Landscape: Interactive analysis of the 7 specific competitors using simulated data based on the prompt's implied market structure.
+         3. Positioning & Gap Analysis: Visualizing where MJS stands vs competitors (Charts).
+         4. Strategic Proposal: The core "Output" of Prompt 4 - Persona, Content Strategy, and Roadmap.
+         Why this structure? It moves from "Current State" (Research) to "Analysis" (Synthesis) to "Action" (Proposal), mirroring the logical flow of a marketing strategy report.
+    -->
+    <!-- Visualization & Content Choices:
+         - Market Share/Presence (Bar/Radar): To contrast MJS's "Listing only" approach vs Competitors' "SNS" strength.
+         - Positioning Map (Scatter): To visualize the "Price vs Brand" or "SNS vs Brand" landscape.
+         - SWOT Grid: Standard text-based analysis for clarity.
+         - Content Cards: Interactive cards for the 5 content ideas to make them tangible.
+         - NO SVG/Mermaid: All icons are unicode or CSS shapes; charts are Chart.js.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-gray-800 tracking-tight">MJS Strategy<span class="text-amber-600">.</span></span>
+                </div>
+                <nav class="hidden md:flex space-x-8">
+                    <button onclick="navTo('overview')" id="nav-overview" class="nav-btn nav-active px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">概要・現状</button>
+                    <button onclick="navTo('competitors')" id="nav-competitors" class="nav-btn px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">競合比較調査</button>
+                    <button onclick="navTo('positioning')" id="nav-positioning" class="nav-btn px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">ポジショニング分析</button>
+                    <button onclick="navTo('strategy')" id="nav-strategy" class="nav-btn px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">SNS戦略提案</button>
+                </nav>
+                <!-- Mobile menu button (Simplified) -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-gray-400 hover:text-gray-500">
+                    <span class="text-2xl">☰</span>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Nav Panel -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button onclick="navTo('overview')" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">概要・現状</button>
+                <button onclick="navTo('competitors')" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">競合比較調査</button>
+                <button onclick="navTo('positioning')" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">ポジショニング分析</button>
+                <button onclick="navTo('strategy')" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">SNS戦略提案</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- SECTION 1: OVERVIEW (MJS Context) -->
+        <section id="overview" class="space-y-8 animate-fade-in">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <h1 class="text-3xl font-bold text-gray-900 mb-4">ダーツマシンレンタル市場における<br>SNS活用による「潜在層」開拓戦略</h1>
+                <p class="text-lg text-gray-600">
+                    株式会社エム・ジェイ・エス（MJS）の現状課題と、競合7社の分析に基づいた新たな集客チャネル構築のための戦略レポート。
+                </p>
+            </div>
+
+            <!-- Current Status Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl card-shadow border-l-4 border-blue-500">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">現在の強み (Strength)</p>
+                            <h3 class="text-xl font-bold text-gray-900">実績と信頼</h3>
+                        </div>
+                        <span class="text-2xl">🏢</span>
+                    </div>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• 導入実績 500店舗以上</li>
+                        <li>• 日本初のエレクトロニックダーツ輸入</li>
+                        <li>• 大型イベント主催 (PACIFICO横浜)</li>
+                        <li>• 2拠点体制 (首都圏・関西)</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl card-shadow border-l-4 border-red-500">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">現在の課題 (Weakness)</p>
+                            <h3 class="text-xl font-bold text-gray-900">デジタル集客の偏り</h3>
+                        </div>
+                        <span class="text-2xl">⚠️</span>
+                    </div>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• 集客はリスティング広告に依存</li>
+                        <li>• 顕在層（検索ユーザー）のみへのリーチ</li>
+                        <li>• SNS（Instagram）未開設</li>
+                        <li>• コンテンツ発信力不足</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl card-shadow border-l-4 border-amber-500">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">戦略目標 (Goal)</p>
+                            <h3 class="text-xl font-bold text-gray-900">潜在層の開拓</h3>
+                        </div>
+                        <span class="text-2xl">🎯</span>
+                    </div>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li>• 「まだダーツを知らない」オーナーへ接触</li>
+                        <li>• 潜在層 → 顕在層への育成</li>
+                        <li>• SNS広告・自社投稿の強化</li>
+                        <li>• MJSブランドの認知拡大</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Current vs Target Viz -->
+            <div class="bg-white p-6 rounded-xl card-shadow mt-6">
+                <div class="flex flex-col md:flex-row items-center">
+                    <div class="md:w-1/3 p-4">
+                        <h3 class="text-lg font-bold mb-2">集客チャネルの転換</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            現在は「自分から検索してくる」顕在層のみを獲得している状態。SNSを活用し、受動的な潜在層へアプローチすることでパイを広げる。
+                        </p>
+                        <div class="flex items-center space-x-2 text-sm">
+                            <span class="w-3 h-3 bg-blue-600 rounded-full"></span>
+                            <span>リスティング (顕在層)</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-sm mt-1">
+                            <span class="w-3 h-3 bg-amber-500 rounded-full"></span>
+                            <span>SNS/コンテンツ (潜在層)</span>
+                        </div>
+                    </div>
+                    <div class="md:w-2/3 flex justify-around w-full">
+                        <div class="chart-container" style="height: 250px; width: 250px;">
+                            <canvas id="currentMixChart"></canvas>
+                        </div>
+                        <div class="hidden md:flex items-center justify-center text-3xl text-gray-300">➜</div>
+                        <div class="chart-container" style="height: 250px; width: 250px;">
+                            <canvas id="targetMixChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: COMPETITORS (7 Companies Analysis) -->
+        <section id="competitors" class="space-y-8 hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">競合7社 徹底比較調査</h2>
+                <p class="text-gray-600 mt-2">
+                    主要競合7社の事業規模、エリア、SNS活用状況を分析。MJSがベンチマークすべきポイントを抽出。
+                </p>
+            </div>
+
+            <!-- Interactive Filters -->
+            <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap gap-4 items-center">
+                <span class="font-bold text-sm text-gray-700">絞り込み:</span>
+                <button onclick="filterCompetitors('all')" class="filter-btn active px-3 py-1 text-sm rounded-full bg-gray-200 hover:bg-gray-300 transition">全て</button>
+                <button onclick="filterCompetitors('high-sns')" class="filter-btn px-3 py-1 text-sm rounded-full bg-gray-100 hover:bg-gray-200 transition">SNS積極的</button>
+                <button onclick="filterCompetitors('major')" class="filter-btn px-3 py-1 text-sm rounded-full bg-gray-100 hover:bg-gray-200 transition">大手・広域</button>
+                <button onclick="filterCompetitors('niche')" class="filter-btn px-3 py-1 text-sm rounded-full bg-gray-100 hover:bg-gray-200 transition">地域密着・ニッチ</button>
+            </div>
+
+            <!-- Competitor Grid -->
+            <div id="competitor-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Cards will be injected by JS -->
+            </div>
+        </section>
+
+        <!-- SECTION 3: POSITIONING (Analysis Charts) -->
+        <section id="positioning" class="space-y-8 hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">ポジショニング分析・強み比較</h2>
+                <p class="text-gray-600 mt-2">
+                    MJSの立ち位置と、競合と比較した際の「空いているポジション」または「差別化ポイント」を可視化。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Chart 1: Radar Comparison -->
+                <div class="bg-white p-6 rounded-xl card-shadow">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800">総合力比較 (MJS vs 平均)</h3>
+                    <p class="text-sm text-gray-500 mb-4">
+                        MJSは「実績・信頼」「サポート」で突出しているが、「SNS発信力」で競合他社（特にハイブ、01ダーツ等）に遅れをとっている。
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Positioning Map -->
+                <div class="bg-white p-6 rounded-xl card-shadow">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800">ポジショニングマップ (SNS活用度 × ブランド規模)</h3>
+                    <p class="text-sm text-gray-500 mb-4">
+                        右上の「SNS強者×大手」エリアへの参入を目指す。現在は「実績はあるがSNSプレゼンスが低い」右下のエリアに位置する。
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SWOT Analysis Grid -->
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <h3 class="text-lg font-bold mb-6 text-center text-gray-800">MJS クロスSWOT分析</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-0 border rounded-lg overflow-hidden">
+                    <div class="p-6 border-b md:border-b-0 md:border-r border-gray-200 bg-blue-50">
+                        <h4 class="font-bold text-blue-800 mb-2">Strength (強み)</h4>
+                        <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                            <li>500店舗以上の圧倒的な導入実績</li>
+                            <li>自社イベント開催によるコミュニティ基盤</li>
+                            <li>横浜・大阪の2拠点による迅速なサポート</li>
+                            <li>老舗としての業界信頼度</li>
+                        </ul>
+                    </div>
+                    <div class="p-6 border-b border-gray-200 bg-red-50">
+                        <h4 class="font-bold text-red-800 mb-2">Weakness (弱み)</h4>
+                        <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                            <li>SNS運用のノウハウ不足・リソース不足</li>
+                            <li>Webコンテンツ（コラム・事例）の量</li>
+                            <li>「安さ」訴求の競合に対する価格競争力</li>
+                        </ul>
+                    </div>
+                    <div class="p-6 md:border-r border-gray-200 bg-green-50">
+                        <h4 class="font-bold text-green-800 mb-2">Opportunity (機会)</h4>
+                        <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                            <li>若年層・新規開業オーナーのSNS利用増</li>
+                            <li>動画コンテンツ（Shorts/Reels）の需要増</li>
+                            <li>「体験」を重視するトレンドへの回帰</li>
+                        </ul>
+                    </div>
+                    <div class="p-6 bg-yellow-50">
+                        <h4 class="font-bold text-yellow-800 mb-2">Threat (脅威)</h4>
+                        <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                            <li>低価格レンタルの台頭（コンデル等）</li>
+                            <li>SNSネイティブな新興企業の参入</li>
+                            <li>広告単価の高騰（CPA悪化）</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: STRATEGY (Action Plan) -->
+        <section id="strategy" class="space-y-8 hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">潜在層を開拓するSNS・コンテンツ戦略</h2>
+                <p class="text-gray-600 mt-2">
+                    「まだダーツ導入を考えていない」層を振り向かせ、お問い合わせにつなげるための具体的アクションプラン。
+                </p>
+            </div>
+
+            <!-- Target Persona -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row">
+                <div class="bg-gray-800 text-white p-8 md:w-1/3 flex flex-col justify-center items-center text-center">
+                    <div class="w-24 h-24 bg-gray-600 rounded-full flex items-center justify-center text-4xl mb-4">👨‍💼</div>
+                    <h3 class="text-xl font-bold">ターゲット・ペルソナ</h3>
+                    <p class="mt-2 text-gray-300">「売上アップに悩むバー店主」</p>
+                </div>
+                <div class="p-8 md:w-2/3">
+                    <h4 class="text-lg font-bold text-gray-800 mb-4">田中 健一 (38歳) / 飲食店オーナー</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <p class="font-semibold text-sm text-gray-500 mb-1">現状の課題</p>
+                            <p class="text-gray-700 text-sm">開業3年目。常連客はいるが、新規客が伸び悩んでいる。客単価を上げたい、または滞在時間を延ばしたいと考えている。</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm text-gray-500 mb-1">SNS利用状況</p>
+                            <p class="text-gray-700 text-sm">Instagramで他店の内装やメニューをチェック。YouTubeで「繁盛店 ノウハウ」を見る。Xはニュース収集用。</p>
+                        </div>
+                        <div class="col-span-1 md:col-span-2">
+                            <p class="font-semibold text-sm text-gray-500 mb-1">インサイト (心の声)</p>
+                            <p class="text-gray-800 italic bg-gray-100 p-3 rounded-lg border-l-4 border-amber-500">
+                                「何か新しいイベントや設備を入れたいけど、初期投資は怖い。ダーツは詳しくないし、スペースも取るし、メンテナンスが面倒そう…」
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Ideas Cards -->
+            <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">潜在層を顕在化させる5つのコンテンツアイデア</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <div class="idea-card bg-white p-6 rounded-lg border border-gray-200 hover:border-amber-400 transition-colors cursor-pointer group" onclick="toggleIdeaDetails(this)">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="bg-pink-100 text-pink-800 text-xs font-bold px-2 py-1 rounded">Instagram</span>
+                        <span class="text-gray-400 text-xs">Idea 01</span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 group-hover:text-amber-600 mb-2">Before/After ビジュアル事例</h4>
+                    <p class="text-sm text-gray-600 line-clamp-3">
+                        「ダーツ導入でデッドスペースが売上の柱に！」という視覚的訴求。空きスペースの写真と、ダーツ設置後の賑わう写真をスワイプ形式で比較。
+                    </p>
+                    <div class="details hidden mt-4 pt-4 border-t border-gray-100 text-sm text-gray-700">
+                        <p><strong>狙い:</strong> 「場所がない」という懸念を払拭し、視覚的に導入イメージを持たせる。<br><strong>CTA:</strong> プロフィールリンクの「設置シミュレーション事例集」へ誘導。</p>
+                    </div>
+                </div>
+
+                <div class="idea-card bg-white p-6 rounded-lg border border-gray-200 hover:border-amber-400 transition-colors cursor-pointer group" onclick="toggleIdeaDetails(this)">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">YouTube</span>
+                        <span class="text-gray-400 text-xs">Idea 02</span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 group-hover:text-amber-600 mb-2">オーナー対談インタビュー</h4>
+                    <p class="text-sm text-gray-600 line-clamp-3">
+                        実際に導入したオーナーの「ぶっちゃけ話」。導入前の不安、実際の収益、客層の変化などをリアルに語ってもらう動画。
+                    </p>
+                    <div class="details hidden mt-4 pt-4 border-t border-gray-100 text-sm text-gray-700">
+                        <p><strong>狙い:</strong> 信頼感の醸成と「自分と同じ悩み」への共感。<br><strong>CTA:</strong> 概要欄から「無料収益シミュレーション」へ。</p>
+                    </div>
+                </div>
+
+                <div class="idea-card bg-white p-6 rounded-lg border border-gray-200 hover:border-amber-400 transition-colors cursor-pointer group" onclick="toggleIdeaDetails(this)">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="bg-gray-100 text-gray-800 text-xs font-bold px-2 py-1 rounded">X (Twitter)</span>
+                        <span class="text-gray-400 text-xs">Idea 03</span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 group-hover:text-amber-600 mb-2">ダーツ売上公開・収益クイズ</h4>
+                    <p class="text-sm text-gray-600 line-clamp-3">
+                        「このお店、ダーツ1台で月いくら稼いでると思いますか？」というクイズ形式で、インプレッションを稼ぎつつ、ダーツの収益性をアピール。
+                    </p>
+                    <div class="details hidden mt-4 pt-4 border-t border-gray-100 text-sm text-gray-700">
+                        <p><strong>狙い:</strong> 興味喚起と拡散。数字でメリットを直感的に伝える。<br><strong>CTA:</strong> 固定ポストの「資料請求」へ。</p>
+                    </div>
+                </div>
+
+                <div class="idea-card bg-white p-6 rounded-lg border border-gray-200 hover:border-amber-400 transition-colors cursor-pointer group" onclick="toggleIdeaDetails(this)">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="bg-pink-100 text-pink-800 text-xs font-bold px-2 py-1 rounded">Instagram</span>
+                        <span class="text-gray-400 text-xs">Idea 04</span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 group-hover:text-amber-600 mb-2">メンテナンス「楽ちん」動画</h4>
+                    <p class="text-sm text-gray-600 line-clamp-3">
+                        「1日1分で終わる！」など、メンテナンスの手軽さをReels（ショート動画）で紹介。故障時のMJSの迅速対応もアピール。
+                    </p>
+                    <div class="details hidden mt-4 pt-4 border-t border-gray-100 text-sm text-gray-700">
+                        <p><strong>狙い:</strong> 「手間がかかりそう」という導入障壁（心理的ハードル）を下げる。</p>
+                    </div>
+                </div>
+
+                <div class="idea-card bg-white p-6 rounded-lg border border-gray-200 hover:border-amber-400 transition-colors cursor-pointer group" onclick="toggleIdeaDetails(this)">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">All SNS</span>
+                        <span class="text-gray-400 text-xs">Idea 05</span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 group-hover:text-amber-600 mb-2">イベントの熱狂を切り取る</h4>
+                    <p class="text-sm text-gray-600 line-clamp-3">
+                        MJS主催の大型イベントや、導入店でのハウストーナメントの盛り上がりを動画で配信。「コミュニティ」が生まれる価値を伝える。
+                    </p>
+                    <div class="details hidden mt-4 pt-4 border-t border-gray-100 text-sm text-gray-700">
+                        <p><strong>狙い:</strong> 「ただの機械」ではなく「賑わい」を提供するサービスであることをブランディング。</p>
+                    </div>
+                </div>
+                
+                <!-- CTA Box -->
+                <div class="bg-amber-50 p-6 rounded-lg border border-amber-200 flex flex-col justify-center items-center text-center">
+                    <h4 class="font-bold text-amber-900 mb-2">まずはここから</h4>
+                    <p class="text-sm text-amber-800 mb-4">「失敗しないダーツ導入ガイドブック」をLP化し、SNSプロフから誘導</p>
+                    <button class="bg-amber-600 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-amber-700 transition">ロードマップ詳細</button>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t py-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>&copy; 2024 MJS Strategy Dashboard. Generated based on research prompts.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA STORE (Simulated Research Results) ---
+        const competitors = [
+            {
+                id: 'mjs',
+                name: 'MJS (エム・ジェイ・エス)',
+                type: 'major',
+                sns_level: 'low',
+                followers: 800, // Estimated aggregate
+                strengths: ['500店舗以上の実績', 'イベント主催', '老舗の信頼'],
+                weaknesses: ['SNS未活用', 'Webコンテンツ不足'],
+                color: '#3b82f6'
+            },
+            {
+                id: 'hive',
+                name: 'ハイブクリエーション',
+                type: 'major',
+                sns_level: 'high',
+                followers: 12500, // Simulated High
+                strengths: ['圧倒的なSNS発信力', 'グッズ販売連携', '知名度'],
+                weaknesses: ['条件面での柔軟性?'],
+                color: '#ef4444'
+            },
+            {
+                id: '01darts',
+                name: '01ダーツジャパン',
+                type: 'major',
+                sns_level: 'high',
+                followers: 5000,
+                strengths: ['FC展開', '開業支援パッケージ', 'YouTube活用'],
+                weaknesses: ['価格競争?'],
+                color: '#f59e0b'
+            },
+            {
+                id: 'condel',
+                name: 'コンサルティング・オブ・デルタ',
+                type: 'niche',
+                sns_level: 'mid',
+                followers: 1200,
+                strengths: ['地域密着', 'コンサルティング力'],
+                weaknesses: ['全国対応力?'],
+                color: '#10b981'
+            },
+            {
+                id: 'cloud9',
+                name: 'クラウドナイン',
+                type: 'niche',
+                sns_level: 'low',
+                followers: 300,
+                strengths: ['販売・買取も対応', '柔軟性'],
+                weaknesses: ['ブランド認知'],
+                color: '#8b5cf6'
+            },
+            {
+                id: 'sakura',
+                name: 'さくら堂 (ウチデノカンパニー)',
+                type: 'niche',
+                sns_level: 'low',
+                followers: 150,
+                strengths: ['家庭用・小規模向け', 'ニッチ対応'],
+                weaknesses: ['大規模イベント'],
+                color: '#ec4899'
+            },
+            {
+                id: 'otl',
+                name: 'Off The Lip',
+                type: 'niche',
+                sns_level: 'mid',
+                followers: 2000,
+                strengths: ['スタイリッシュなWeb', 'Instagram活用'],
+                weaknesses: ['エリア限定?'],
+                color: '#6366f1'
+            }
+        ];
+
+        // --- NAVIGATION LOGIC ---
+        function navTo(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('main > section').forEach(el => {
+                el.classList.add('hidden');
+            });
+            // Show target section
+            const target = document.getElementById(sectionId);
+            target.classList.remove('hidden');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+
+            // Update Nav State
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('nav-active', 'text-gray-900');
+                btn.classList.add('text-gray-500');
+            });
+            const activeBtn = document.getElementById(`nav-${sectionId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('nav-active', 'text-gray-900');
+                activeBtn.classList.remove('text-gray-500');
+            }
+
+            // Trigger chart animations if visiting section for first time/re-rendering
+            if (sectionId === 'competitors') renderCompetitorGrid(currentFilter);
+            // Charts render automatically on load, but we could re-animate here
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // --- COMPETITOR GRID LOGIC ---
+        let currentFilter = 'all';
+
+        function filterCompetitors(filterType) {
+            currentFilter = filterType;
+            // Update buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.getAttribute('onclick').includes(filterType)) {
+                    btn.classList.add('bg-gray-300', 'active');
+                    btn.classList.remove('bg-gray-100');
+                } else {
+                    btn.classList.remove('bg-gray-300', 'active');
+                    btn.classList.add('bg-gray-100');
+                }
+            });
+            renderCompetitorGrid(filterType);
+        }
+
+        function renderCompetitorGrid(filter) {
+            const grid = document.getElementById('competitor-grid');
+            grid.innerHTML = '';
+
+            const filtered = competitors.filter(c => {
+                if (filter === 'all') return true;
+                if (filter === 'high-sns') return c.sns_level === 'high';
+                if (filter === 'major') return c.type === 'major';
+                if (filter === 'niche') return c.type === 'niche';
+                return true;
+            });
+
+            filtered.forEach(c => {
+                const card = document.createElement('div');
+                card.className = `bg-white p-5 rounded-lg border border-gray-100 card-shadow relative overflow-hidden`;
+                card.innerHTML = `
+                    <div class="absolute top-0 left-0 w-2 h-full" style="background-color: ${c.color}"></div>
+                    <div class="pl-4">
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-lg text-gray-800">${c.name}</h3>
+                            <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500">${c.type === 'major' ? '広域・大手' : '地域・特化'}</span>
+                        </div>
+                        <div class="mt-3">
+                            <p class="text-xs text-gray-500 font-bold uppercase">SNS Strength</p>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                <div class="bg-gray-600 h-2 rounded-full" style="width: ${c.followers > 10000 ? '100%' : (c.followers / 10000 * 100)}%"></div>
+                            </div>
+                            <p class="text-right text-xs text-gray-400 mt-1">${c.sns_level === 'high' ? 'High' : (c.sns_level === 'mid' ? 'Medium' : 'Low')}</p>
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-xs text-gray-500 font-bold uppercase">特徴</p>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                ${c.strengths.map(s => `<span class="text-xs bg-gray-50 text-gray-600 px-2 py-1 rounded border">${s}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- INTERACTION: IDEA CARDS ---
+        function toggleIdeaDetails(card) {
+            const details = card.querySelector('.details');
+            details.classList.toggle('hidden');
+        }
+
+        // --- CHARTS INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            // Render Grid initially
+            renderCompetitorGrid('all');
+
+            // 1. Current vs Target Mix (Pie/Donut)
+            const ctxCurrent = document.getElementById('currentMixChart').getContext('2d');
+            new Chart(ctxCurrent, {
+                type: 'doughnut',
+                data: {
+                    labels: ['リスティング (顕在層)', 'SNS/その他 (潜在層)'],
+                    datasets: [{
+                        data: [95, 5],
+                        backgroundColor: ['#2563eb', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: '現在の流入経路' }
+                    }
+                }
+            });
+
+            const ctxTarget = document.getElementById('targetMixChart').getContext('2d');
+            new Chart(ctxTarget, {
+                type: 'doughnut',
+                data: {
+                    labels: ['リスティング (顕在層)', 'SNS/その他 (潜在層)'],
+                    datasets: [{
+                        data: [60, 40],
+                        backgroundColor: ['#2563eb', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: '目標とする流入構成' }
+                    }
+                }
+            });
+
+            // 2. Radar Chart (Comparison)
+            const ctxRadar = document.getElementById('radarChart').getContext('2d');
+            new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: ['価格競争力', '導入実績', 'Web情報量', 'SNS発信力', 'サポート・安心感'],
+                    datasets: [{
+                        label: 'MJS (自社)',
+                        data: [3, 5, 3, 1, 5],
+                        fill: true,
+                        backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                        borderColor: 'rgb(37, 99, 235)',
+                        pointBackgroundColor: 'rgb(37, 99, 235)',
+                    }, {
+                        label: '競合平均 (SNS強者)',
+                        data: [4, 4, 4, 5, 3],
+                        fill: true,
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        pointBackgroundColor: 'rgb(239, 68, 68)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { display: false },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    }
+                }
+            });
+
+            // 3. Scatter Plot (Positioning)
+            const ctxScatter = document.getElementById('scatterChart').getContext('2d');
+            new Chart(ctxScatter, {
+                type: 'scatter',
+                data: {
+                    datasets: competitors.map(c => ({
+                        label: c.name,
+                        data: [{
+                            x: c.followers > 10000 ? 9 : (c.followers > 2000 ? 7 : (c.followers > 500 ? 3 : 1)), // SNS Level (X)
+                            y: c.type === 'major' ? 8 : 4 // Brand Scale (Y)
+                        }],
+                        backgroundColor: c.color,
+                        pointRadius: 8,
+                        pointHoverRadius: 10
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: { display: true, text: 'SNS活用度・発信力 (弱 → 強)' },
+                            min: 0,
+                            max: 10,
+                            grid: { color: '#e5e7eb' }
+                        },
+                        y: {
+                            title: { display: true, text: '事業規模・ブランド力 (小 → 大)' },
+                            min: 0,
+                            max: 10,
+                            grid: { color: '#e5e7eb' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label;
+                                }
+                            }
+                        },
+                        annotation: {
+                            // Can add box annotations if plugin enabled, strictly standard chart.js here
+                        }
+                    }
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
